@@ -11,6 +11,7 @@ import songRoutes from "../routes/songs.route.js";
 import albumRoutes from "../routes/albums.route.js";
 import statRoutes from "../routes/stats.route.js";
 import connectDb from "../db/connectDb.js";
+import { handleError } from "../middlewares/error.middleware.js";
 
 dotenv.config();
 
@@ -33,6 +34,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/songs", songRoutes);
 app.use("/api/albums", albumRoutes);
 app.use("/api/stats", statRoutes);
+
+app.use(handleError)
 
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
