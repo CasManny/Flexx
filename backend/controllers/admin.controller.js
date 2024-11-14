@@ -1,5 +1,5 @@
 import { uploadToCloudinary } from "../lib/upload-to-cloudinary.js";
-import { Album } from "../models/album.model";
+import { Album } from "../models/album.model.js";
 import { Song } from "../models/song.model.js";
 
 export const createSong = async (req, res, next) => {
@@ -11,8 +11,8 @@ export const createSong = async (req, res, next) => {
     const audioFile = req.files.audioFile;
     const imageFile = req.files.imageFile;
 
-      const audioUrl = await uploadToCloudinary(audioFile);
-      const imageUrl = await uploadToCloudinary(imageFile)
+    const audioUrl = await uploadToCloudinary(audioFile);
+    const imageUrl = await uploadToCloudinary(imageFile);
 
     const song = new Song({
       title,
@@ -36,3 +36,63 @@ export const createSong = async (req, res, next) => {
     next(error);
   }
 };
+
+export const deleteSong = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const song = await Song.findById(id);
+    if (song.albumId) {
+      await Album.findByIdAndUpdate(song.albumId, {
+        $pull: { songs: song.albumId },
+      });
+    }
+
+    await Song.findByIdAndDelete(id);
+
+    return res.status(200).json({ message: "song deleted successfully" });
+  } catch (error) {
+    console.log(`Error in deletesong controller: ${error.message}`);
+    next(error);
+  }
+};
+
+export const createAlbum = async (req, res, next) => {
+  try {
+    const { title, artist, releaseYear } = req.body;
+    const { imageFile } = req.files;
+    if (!imageFile || !title || !artist || !releaseYear) {
+      return res
+        .status(400)
+        .json({ message: "Please provide all information" });
+    }
+    const imageUrl = await uploadToCloudinary(imageFile);
+
+    const album = new Album({
+      title,
+      artist,
+      imageUrl,
+      releaseYear,
+    });
+    await album.save();
+
+    res.status(201).json(album);
+  } catch (error) {
+    console.log(`Error in createAlbum controller: ${error.message}`);
+    next(error);
+  }
+};
+
+export const deleteAlbum = async (req, res, next) => {
+    try {
+        const { id } = req.params
+        await Song.deleteMany({ albumId: id })
+        await Album.findByIdAndDelete(id)
+
+        res.status(200).json({message: "Album deleted successfully..."})
+        
+  } catch (error) {}
+};
+
+export const checkAdmin = async (req, res, next) => {
+    res.status(200).json({admin: true})
+}

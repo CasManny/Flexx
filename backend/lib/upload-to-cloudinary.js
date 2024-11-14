@@ -12,3 +12,4 @@ export const uploadToCloudinary = async (file) => {
     throw new Error("Error uploading...");
   }
 };
+
